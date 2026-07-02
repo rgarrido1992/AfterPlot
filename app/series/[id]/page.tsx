@@ -55,6 +55,26 @@ export default function SeriesDetailsPage() {
     fetchSeries()
   }, [seriesId, router])
 
+  const handleFollowSeries = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/user-series/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ seriesId: parseInt(seriesId) }),
+      })
+
+      if (res.ok) {
+        setIsFollowing(true)
+      }
+    } catch (error) {
+      console.error('Error following series:', error)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-afterplot-light via-white to-afterplot-light flex items-center justify-center">
@@ -123,15 +143,25 @@ export default function SeriesDetailsPage() {
               )}
               <div className="p-4 space-y-3">
                 <button
-                  onClick={() => setIsFollowing(!isFollowing)}
+                  onClick={handleFollowSeries}
+                  disabled={isFollowing}
                   className={`w-full py-3 font-semibold rounded-lg transition ${
                     isFollowing
-                      ? 'bg-afterplot-cyan text-white'
-                      : 'border-2 border-afterplot-cyan text-afterplot-cyan hover:bg-afterplot-cyan hover:text-white'
+                      ? 'bg-green-100 text-green-700 cursor-default'
+                      : 'bg-gradient-to-r from-afterplot-blue to-afterplot-teal text-white hover:shadow-lg'
                   }`}
                 >
                   {isFollowing ? '✓ Siguiendo' : '+ Seguir'}
                 </button>
+
+                {isFollowing && (
+                  <Link
+                    href={`/series/${seriesId}/episodes`}
+                    className="block w-full py-3 border-2 border-afterplot-cyan text-afterplot-cyan font-semibold rounded-lg hover:bg-afterplot-cyan hover:text-white text-center transition"
+                  >
+                    Ver Episodios
+                  </Link>
+                )}
               </div>
             </div>
           </div>

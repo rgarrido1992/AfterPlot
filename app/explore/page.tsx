@@ -103,12 +103,12 @@ export default function ExplorePage() {
             {results.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {results.map((series) => (
-                  <Link
-                    key={series.id}
-                    href={`/series/${series.id}`}
-                    className="group"
-                  >
-                    <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:scale-105 transition duration-300">
+                  <div key={series.id} className="group">
+                    <Link
+                      href={`/series/${series.id}`}
+                      className="block"
+                    >
+                      <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:scale-105 transition duration-300">
                       <div className="relative h-64 bg-gradient-to-br from-afterplot-blue to-afterplot-cyan overflow-hidden">
                         {series.poster_path ? (
                           <img
