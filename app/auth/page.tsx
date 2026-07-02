@@ -120,6 +120,9 @@ export default function AuthPage() {
               <p className="text-afterplot-blue opacity-70 mb-6">
                 Hemos enviado un código a <strong>{email}</strong>
               </p>
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm mb-4">
+                💡 <strong>Dev Mode:</strong> Usa cualquier código de 6 dígitos (ej: 000000)
+              </div>
 
               <form onSubmit={handleVerify} className="space-y-4">
                 <input

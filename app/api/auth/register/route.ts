@@ -27,8 +27,12 @@ export async function POST(request: NextRequest) {
 
     const user = await createUser(email, passwordHash, username, verificationCode)
 
-    // Send verification email
-    await sendVerificationEmail(email, verificationCode)
+    // Send verification email (skip in development)
+    if (process.env.NODE_ENV === 'production') {
+      await sendVerificationEmail(email, verificationCode)
+    } else {
+      console.log(`📧 DEV MODE: Verification code for ${email}: ${verificationCode}`)
+    }
 
     return NextResponse.json(
       { message: 'Usuario registrado. Verifica tu email.', user },

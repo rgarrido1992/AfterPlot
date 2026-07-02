@@ -47,12 +47,19 @@ export async function createUser(
 }
 
 export async function verifyUser(email: string, token: string) {
+  // In development, allow any token
+  const condition = process.env.NODE_ENV === 'development'
+    ? 'email = $1'
+    : 'email = $1 AND verification_token = $2 AND verification_token_expires_at > NOW()'
+
+  const params = process.env.NODE_ENV === 'development' ? [email] : [email, token]
+
   const result = await query(
     `UPDATE users
      SET is_verified = true, verification_token = null, verification_token_expires_at = null
-     WHERE email = $1 AND verification_token = $2 AND verification_token_expires_at > NOW()
+     WHERE ${condition}
      RETURNING id, email, username`,
-    [email, token]
+    params
   )
   return result.rows[0]
 }
