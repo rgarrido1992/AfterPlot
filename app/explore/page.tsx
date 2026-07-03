@@ -138,8 +138,9 @@ export default function ExplorePage() {
                           {series.first_air_date ? new Date(series.first_air_date).getFullYear() : 'Año desconocido'}
                         </p>
                       </div>
-                    </div>
-                  </Link>
+                      </div>
+                    </Link>
+                  </div>
                 ))}
               </div>
             ) : (

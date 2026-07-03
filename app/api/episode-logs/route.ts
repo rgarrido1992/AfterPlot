@@ -44,14 +44,24 @@ export async function POST(request: NextRequest) {
        ON CONFLICT (user_id, episode_id) DO UPDATE SET
          is_watched = EXCLUDED.is_watched,
          watched_at = CASE WHEN EXCLUDED.is_watched THEN NOW() ELSE episode_logs.watched_at END,
-         rating = EXCLUDED.rating,
-         platform = EXCLUDED.platform,
-         emotion_emoji = EXCLUDED.emotion_emoji,
-         favorite_character = EXCLUDED.favorite_character,
+         rating = COALESCE(EXCLUDED.rating, episode_logs.rating),
+         platform = COALESCE(EXCLUDED.platform, episode_logs.platform),
+         emotion_emoji = COALESCE(EXCLUDED.emotion_emoji, episode_logs.emotion_emoji),
+         favorite_character = COALESCE(EXCLUDED.favorite_character, episode_logs.favorite_character),
          updated_at = NOW()
        RETURNING *`,
       [decoded.userId, episodeId, isWatched, rating, platform, emotionEmoji, favoriteCharacter]
     )
+
+    // Refresh last_watched_at so PAUSADA triggers and list ordering work
+    if (isWatched) {
+      await query(
+        `UPDATE user_series us SET last_watched_at = NOW()
+         FROM episodes e
+         WHERE e.id = $2 AND us.series_id = e.series_id AND us.user_id = $1`,
+        [decoded.userId, episodeId]
+      )
+    }
 
     return NextResponse.json(
       { message: 'Episodio actualizado', log: result.rows[0] },
@@ -87,23 +97,31 @@ export async function GET(request: NextRequest) {
     }
 
     const episodeId = request.nextUrl.searchParams.get('episodeId')
+    const seriesId = request.nextUrl.searchParams.get('seriesId')
 
-    if (!episodeId) {
-      return NextResponse.json(
-        { error: 'episodeId requerido' },
-        { status: 400 }
+    if (episodeId) {
+      const result = await query(
+        `SELECT * FROM episode_logs
+         WHERE user_id = $1 AND episode_id = $2`,
+        [decoded.userId, episodeId]
       )
+      return NextResponse.json({ log: result.rows[0] || null }, { status: 200 })
     }
 
-    const result = await query(
-      `SELECT * FROM episode_logs
-       WHERE user_id = $1 AND episode_id = $2`,
-      [decoded.userId, episodeId]
-    )
+    if (seriesId) {
+      const result = await query(
+        `SELECT el.*, e.season_number, e.episode_number
+         FROM episode_logs el
+         JOIN episodes e ON el.episode_id = e.id
+         WHERE el.user_id = $1 AND e.series_id = $2 AND el.is_watched = true`,
+        [decoded.userId, seriesId]
+      )
+      return NextResponse.json({ logs: result.rows }, { status: 200 })
+    }
 
     return NextResponse.json(
-      { log: result.rows[0] || null },
-      { status: 200 }
+      { error: 'episodeId o seriesId requerido' },
+      { status: 400 }
     )
   } catch (error) {
     console.error('Get episode log error:', error)

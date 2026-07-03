@@ -10,6 +10,7 @@ interface Stats {
   totalMinutes: number
   totalSeries: number
   topPlatforms: Array<{ platform: string; count: string }>
+  topGenres: Array<{ genre: string; count: string }>
 }
 
 export default function DashboardPage() {
@@ -146,8 +147,8 @@ export default function DashboardPage() {
                     icon: '⏱️',
                   },
                   {
-                    label: 'Géneros Favoritos',
-                    value: '-',
+                    label: 'Género Favorito',
+                    value: stats?.topGenres?.[0]?.genre || '-',
                     icon: '🏆',
                   },
                 ].map((stat, i) => (

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSeries, getSeriesEpisodes } from '@/lib/tmdb'
+import { getSeries } from '@/lib/tmdb'
+import { upsertSeries } from '@/lib/cache'
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const seriesId = parseInt(params.id)
+    const { id } = await params
+    const seriesId = parseInt(id)
 
     if (isNaN(seriesId)) {
       return NextResponse.json(
@@ -16,6 +18,11 @@ export async function GET(
     }
 
     const series = await getSeries(seriesId)
+
+    // Keep the local catalog cache fresh (FK target for user_series/episodes)
+    await upsertSeries(series).catch((err) =>
+      console.error('Series cache error:', err)
+    )
 
     return NextResponse.json(series, { status: 200 })
   } catch (error) {

@@ -80,7 +80,8 @@ CREATE TABLE episode_logs (
   emotion_emoji VARCHAR(10), -- Emoji representing emotion
   favorite_character VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, episode_id)
 );
 
 -- Emotions Mapping (for emoji selection)

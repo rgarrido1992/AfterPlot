@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { verifyToken } from '@/lib/auth'
+import { ensureSeries } from '@/lib/cache'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +31,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // The series must exist in the local cache before the FK insert
+    await ensureSeries(parseInt(seriesId))
 
     const result = await query(
       `INSERT INTO user_series (user_id, series_id, status)

@@ -51,11 +51,16 @@ export async function GET(request: NextRequest) {
     )
     const totalSeries = parseInt(seriesResult.rows[0].count)
 
-    // Top genres
+    // Top 5 genres by number of series in the profile
     const genresResult = await query(
-      `SELECT s.genres FROM user_series us
-       JOIN series s ON us.series_id = s.id
-       WHERE us.user_id = $1`,
+      `SELECT g->>'name' as genre, COUNT(*) as count
+       FROM user_series us
+       JOIN series s ON us.series_id = s.id,
+       jsonb_array_elements(s.genres) g
+       WHERE us.user_id = $1
+       GROUP BY g->>'name'
+       ORDER BY count DESC
+       LIMIT 5`,
       [userId]
     )
 
@@ -78,6 +83,7 @@ export async function GET(request: NextRequest) {
           totalMinutes,
           totalSeries,
           topPlatforms: platformsResult.rows,
+          topGenres: genresResult.rows,
         },
       },
       { status: 200 }

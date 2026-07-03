@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSeriesEpisodes } from '@/lib/tmdb'
+import { ensureSeries, upsertEpisodes } from '@/lib/cache'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,6 +15,14 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await getSeriesEpisodes(parseInt(seriesId), parseInt(seasonNumber))
+
+    // Cache locally so episode_logs FKs resolve and stats can join runtimes
+    try {
+      await ensureSeries(parseInt(seriesId))
+      await upsertEpisodes(parseInt(seriesId), data.episodes || [])
+    } catch (err) {
+      console.error('Episodes cache error:', err)
+    }
 
     return NextResponse.json(data, { status: 200 })
   } catch (error) {

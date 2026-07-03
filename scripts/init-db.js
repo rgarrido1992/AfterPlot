@@ -2,8 +2,22 @@ const { Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
+function loadEnvLocal() {
+  const envPath = path.join(__dirname, '..', '.env.local');
+  if (!fs.existsSync(envPath)) return;
+  for (const line of fs.readFileSync(envPath, 'utf-8').split(/\r?\n/)) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match && !process.env[match[1].trim()]) {
+      process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+}
+
+loadEnvLocal();
+
 const client = new Client({
-  connectionString: 'postgresql://postgres:vnoCjAvaWmEQlzviNAtHvDXWdeakcszA@thomas.proxy.rlwy.net:13277/railway',
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
 async function initializeDatabase() {
